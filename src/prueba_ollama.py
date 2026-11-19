@@ -6,7 +6,7 @@ con el modelo de Ollama.
 
 from langchain_ollama import ChatOllama
 
-from backend.src.config import MODELO, OLLAMA_URL
+from src.config import MODELO, OLLAMA_URL
 
 
 modelo = ChatOllama(
