@@ -9,8 +9,8 @@ pensar... hasta que responde sin pedir más tools.
 from langchain.agents import create_agent
 from langchain_ollama import ChatOllama
 
-from src.config import MODELO, OLLAMA_URL
-from src.herramientas import (calcular_saldo, consultar_disponibilidad, consultar_pronostico,
+from backend.src.config import MODELO, OLLAMA_URL
+from backend.src.herramientas import (calcular_saldo, consultar_disponibilidad, consultar_pronostico,
                           crear_reserva, estimar_costo, listar_destinos)
 
 

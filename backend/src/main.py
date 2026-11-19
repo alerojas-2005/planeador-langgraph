@@ -8,11 +8,11 @@ Uso (desde la raíz del repositorio):
 import sys
 import time
 
-from src.config import MODELO
+from backend.src.config import MODELO
 
 
 def main() -> None:
-    from src.grafo import app, planear     # se importa aquí para mostrar primero el mensaje de carga
+    from backend.src.grafo import app, planear     # se importa aquí para mostrar primero el mensaje de carga
 
     if "--grafo" in sys.argv:
         # Pega la salida en https://mermaid.live para ver el dibujo del grafo.
@@ -27,7 +27,7 @@ def main() -> None:
         if not pregunta:
             continue
         inicio = time.perf_counter()
-        respuesta = planear(pregunta)
+        respuesta = planear(pregunta, "consola")
         segundos = time.perf_counter() - inicio
         print(f"\nPlaneador ({segundos:.0f} s):\n{respuesta}")
 

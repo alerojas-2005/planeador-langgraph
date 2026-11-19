@@ -1,5 +1,5 @@
 """prueba_agente.py — Prueba UN agente y muestra cada mensaje del ciclo ReAct."""
-from src.agentes import agente_presupuesto
+from backend.src.agentes import agente_presupuesto
 
 pregunta = "Somos 4 amigos con 350000 pesos. ¿Nos alcanza para ir a Zipaquirá?"
 resultado = agente_presupuesto.invoke({"messages": [{"role": "user", "content": pregunta}]})

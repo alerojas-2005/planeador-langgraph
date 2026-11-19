@@ -17,19 +17,33 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
+from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 
-from src.agentes import agente_clima, agente_presupuesto, agente_reservas, crear_modelo
-from src.config import MAX_PASOS
+from backend.src.agentes import agente_clima, agente_presupuesto, agente_reservas, crear_modelo
+from backend.src.config import MAX_PASOS
 
 
 # 1. ESTADO: la "memoria compartida" que viaja por todos los nodos.
 #    Annotated[list, operator.add] = REDUCER: lo que devuelve un nodo se
 #    AGREGA a la lista en lugar de reemplazarla.
+# RETO ADICIONAL — memoria conversacional: con un checkpointer (InMemorySaver) el
+# estado se guarda por thread_id. `historial` acumula los turnos anteriores;
+# `resultados` y `consultados` se reinician en cada pregunta nueva (REINICIAR).
+REINICIAR = "__reiniciar__"
+
+
+def acumular_o_reiniciar(actual: list[str], nuevo: list[str]) -> list[str]:
+    if nuevo and nuevo[0] == REINICIAR:
+        return []
+    return actual + nuevo
+
+
 class EstadoPlaneador(TypedDict):
     pregunta: str
-    resultados: Annotated[list[str], operator.add]
-    consultados: Annotated[list[str], operator.add]
+    historial: Annotated[list[str], operator.add]
+    resultados: Annotated[list[str], acumular_o_reiniciar]
+    consultados: Annotated[list[str], acumular_o_reiniciar]
     siguiente: str
     respuesta_final: str
 
@@ -53,14 +67,16 @@ Reglas:
 1. Elige solo agentes que la pregunta realmente necesita y que no hayan sido consultados.
 2. Si el usuario quiere reservar con una condición (clima, dinero), consulta primero esos agentes
    y deja "reservas" de último.
-3. Si ya hay información suficiente, o la pregunta no trata de estos temas, responde "fin"."""
+3. Usa la conversación anterior para entender referencias ("ahí", "ese destino"), sin repetir agentes ya resueltos en esos turnos si la pregunta no lo pide.
+4. Si ya hay información suficiente, o la pregunta no trata de estos temas, responde "fin"."""
 
 PROMPT_SINTETIZADOR = """Eres el asistente final de un planeador de salidas de fin de semana.
 Redacta la respuesta para el usuario usando SOLO los resultados de los agentes.
 - No inventes datos que no estén en los resultados.
 - Organiza la respuesta en un párrafo corto o en viñetas, en español y con tono amable.
 - Si se hizo una reserva, muestra el código.
-- Si no hay resultados, explica que puedes ayudar con clima, presupuesto y reservas
+- Puedes apoyarte en la conversación anterior para preguntas de seguimiento.
+- Si no hay resultados ni contexto, explica que puedes ayudar con clima, presupuesto y reservas
   para Guatavita, Zipaquirá, Villa de Leyva, Suesca y Chicaque."""
 
 modelo_supervisor = crear_modelo().with_structured_output(Decision)
@@ -70,7 +86,9 @@ modelo_sintetizador = crear_modelo()
 def _contexto(estado: EstadoPlaneador) -> str:
     """Texto con la pregunta y lo que ya respondieron los agentes."""
     previos = "\n".join(estado["resultados"]) or "(todavía no hay resultados)"
-    return f"Pregunta del usuario: {estado['pregunta']}\n\nResultados de otros agentes:\n{previos}"
+    anteriores = "\n".join(estado.get("historial", [])[-6:]) or "(conversación nueva)"
+    return (f"Conversación anterior (para entender referencias como 'ahí', 'ese plan', 'el mismo destino'):\n{anteriores}\n\n"
+            f"Pregunta del usuario: {estado['pregunta']}\n\nResultados de otros agentes:\n{previos}")
 
 
 # 3. NODOS: funciones que reciben el estado y devuelven SOLO lo que cambian.
@@ -106,7 +124,8 @@ def crear_nodo_especialista(nombre: str, agente):
 
 def nodo_sintetizador(estado: EstadoPlaneador) -> dict:
     respuesta = modelo_sintetizador.invoke([("system", PROMPT_SINTETIZADOR), ("human", _contexto(estado))])
-    return {"respuesta_final": respuesta.content}
+    return {"respuesta_final": respuesta.content,
+            "historial": [f"Usuario: {estado['pregunta']}", f"Asistente: {respuesta.content}"]}
 
 
 # 4. ARISTA CONDICIONAL: lee el estado y dice a qué nodo ir.
@@ -135,17 +154,18 @@ def construir_grafo():
         grafo.add_edge(especialista, "supervisor")
     grafo.add_edge("sintetizador", END)
 
-    return grafo.compile()
+    return grafo.compile(checkpointer=InMemorySaver())
 
 
 def estado_inicial(pregunta: str) -> dict:
-    return {"pregunta": pregunta, "resultados": [], "consultados": []}
+    return {"pregunta": pregunta, "resultados": [REINICIAR], "consultados": [REINICIAR]}
 
 
 app = construir_grafo()
 
 
-def planear(pregunta: str) -> str:
-    """Punto de entrada usado por main.py y api.py."""
-    estado_final = app.invoke(estado_inicial(pregunta))
+def planear(pregunta: str, thread_id: str = "default") -> str:
+    """Punto de entrada usado por main.py y api.py. Cada thread_id es una conversación."""
+    config = {"configurable": {"thread_id": thread_id or "default"}}
+    estado_final = app.invoke(estado_inicial(pregunta), config)
     return estado_final["respuesta_final"]

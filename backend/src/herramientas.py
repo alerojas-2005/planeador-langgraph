@@ -15,7 +15,7 @@ le explica al modelo qué corregir, para que el agente pueda reintentar.
 """
 from langchain.tools import tool
 
-from src import datos
+from backend.src import datos
 
 DESTINOS_VALIDOS = ", ".join(d["nombre"] for d in datos.DESTINOS.values())
 

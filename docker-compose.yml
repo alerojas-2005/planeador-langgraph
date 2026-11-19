@@ -1,0 +1,68 @@
+services:
+  # 1. Servidor del modelo. No publica el puerto 11434 en tu computador,
+  #    así no choca con un Ollama que ya tengas instalado.
+  ollama:
+    image: ollama/ollama:latest
+    container_name: planeador_ollama
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  # 2. Descarga el modelo una sola vez (si ya está en el volumen termina rápido).
+  ollama-pull:
+    image: ollama/ollama:latest
+    container_name: planeador_ollama_pull
+    environment:
+      OLLAMA_HOST: "http://ollama:11434"
+    command: ["pull", "${MODELO_OLLAMA:-qwen2.5:3b}"]
+    restart: "no"
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+  # 3. Backend: API FastAPI con el grafo multiagente.
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: planeador_backend
+    ports:
+      - "8080:8080"
+    environment:
+      OLLAMA_URL: "${OLLAMA_URL:-http://ollama:11434}"
+      MODELO_OLLAMA: "${MODELO_OLLAMA:-qwen2.5:3b}"
+      PYTHONUNBUFFERED: "1"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      ollama-pull:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/docs', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  # 4. Frontend: la interfaz de chat, en http://localhost:4200
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: planeador_frontend
+    ports:
+      - "4200:4200"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
