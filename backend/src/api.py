@@ -7,6 +7,7 @@ para reutilizar su frontend.
 """
 
 import json
+import os
 import time
 import urllib.request
 import uuid
@@ -16,16 +17,25 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from src.config import OLLAMA_URL
+from backend.src.config import OLLAMA_URL
 
 
 app = FastAPI(title="Planeador de fin de semana - LangGraph")
 
 
-# Permite que el frontend de pruebachat se comunique con esta API.
+# Permite que el frontend se comunique con esta API. Se puede cambiar con la
+# variable CORS_ORIGINS (lista separada por comas).
+ORIGENES_PERMITIDOS = [
+    origen.strip()
+    for origen in os.getenv(
+        "CORS_ORIGINS", "http://localhost:4200,http://127.0.0.1:4200"
+    ).split(",")
+    if origen.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4200"],
+    allow_origins=ORIGENES_PERMITIDOS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -45,10 +55,10 @@ def chat(req: ChatRequest):
     está en desarrollo.
     """
     try:
-        from src.grafo import planear
+        from backend.src.grafo import planear
 
         inicio = time.perf_counter()
-        respuesta = planear(req.question)
+        respuesta = planear(req.question, req.sessionId or "default")
         elapsed_ms = int((time.perf_counter() - inicio) * 1000)
 
         status = "ok" if respuesta and respuesta.strip() else "error"
