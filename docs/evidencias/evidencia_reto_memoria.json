@@ -1,0 +1,52 @@
+{
+  "thread_id": "reto-memoria-2ee74a49",
+  "turnos": [
+    {
+      "turno": 1,
+      "pregunta": "¿Cómo estará el clima en Suesca el sábado?",
+      "respuesta": "El sábado en Suesca será soleado con una temperatura entre 7 °C y 21 °C y una probabilidad de lluvia del 15 %. Ideal para caminar sin impermeable.",
+      "agentes_llamados": [
+        "clima"
+      ],
+      "tools": [
+        {
+          "tool": "consultar_pronostico",
+          "argumentos": {
+            "destino": "Suesca",
+            "dia": "sabado"
+          },
+          "resultado": "Rocas de Suesca el sabado: soleado, entre 7 °C y 21 °C, probabilidad de lluvia 15 %."
+        }
+      ],
+      "tiempo_s": 43.8,
+      "traza_consola": "   [supervisor] -> clima (La pregunta trata específicamente del clima en Suesca para el sábado, y no ha sido consultado ningún agente sobre este tema.)\n   [clima] El sábado en Suesca será soleado con una temperatura entre 7 °C y 21 °C y una probabilidad de lluvia del 15 %. ¡Ideal para caminar sin impermeable!\n   [supervisor] -> clima (La pregunta específica trata sobre el clima en Suesca para el sábado, y no se ha consultado sobre presupuesto ni reservas.)\n",
+      "error": null
+    },
+    {
+      "turno": 2,
+      "pregunta": "¿Y el domingo?",
+      "respuesta": "El sábado en Suesca será soleado con una temperatura entre 7 °C y 21 °C y una probabilidad de lluvia del 15 %. Ideal para caminar sin impermeable. \n\nEl domingo en Suesca será con tormentas en la tarde. Lo mejor será llevar una chaqueta impermeable. La temperatura rondará entre 8 °C y 17 °C.",
+      "agentes_llamados": [
+        "clima"
+      ],
+      "tools": [
+        {
+          "tool": "consultar_pronostico",
+          "argumentos": {
+            "destino": "Suesca",
+            "dia": "domingo"
+          },
+          "resultado": "Rocas de Suesca el domingo: tormentas en la tarde, entre 8 °C y 17 °C, probabilidad de lluvia 70 %."
+        }
+      ],
+      "tiempo_s": 48.8,
+      "traza_consola": "   [supervisor] -> clima (La pregunta del usuario trata sobre el clima del domingo en Suesca, y no se ha consultado sobre este punto antes.)\n   [clima] El domingo en Rocas de Suesca será con tormentas en la tarde. Lo mejor será llevar una chaqueta impermeable. La temperatura rondará entre 8 °C y 17 °C.\n   [supervisor] -> clima (La pregunta del usuario es sobre el domingo, y el clima del domingo aún no ha sido consultado.)\n",
+      "error": null
+    }
+  ],
+  "funciona_sugerido": false,
+  "observaciones": [
+    "En el turno 2 no aparece: 70"
+  ],
+  "esperado_turno2": "Suesca domingo: tormentas en la tarde, 8–17 °C, 70 % de lluvia"
+}
