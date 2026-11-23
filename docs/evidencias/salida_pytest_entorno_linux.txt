@@ -1,0 +1,34 @@
+Pruebas de herramientas (sin modelo) - 2026-11-23 01:13
+Comando: python -m pytest tests/test_herramientas.py -v
+
+============================= test session starts ==============================
+platform linux -- Python 3.10.12, pytest-9.2.0, pluggy-1.7.0 -- /usr/bin/python3
+rootdir: planeador-langgraph
+plugins: anyio-4.16.0, langsmith-0.14.17
+collecting ... collected 23 items
+
+tests/test_herramientas.py::test_pronostico_acepta_tildes_y_mayusculas PASSED [  4%]
+tests/test_herramientas.py::test_costo_de_zipaquira_para_cuatro PASSED   [  8%]
+tests/test_herramientas.py::test_saldo_negativo_dice_cuanto_falta PASSED [ 13%]
+tests/test_herramientas.py::test_no_reserva_sin_cupos PASSED             [ 17%]
+tests/test_herramientas.py::test_destino_desconocido_lista_los_validos PASSED [ 21%]
+tests/test_herramientas.py::test_p1_clima_guatavita_domingo PASSED       [ 26%]
+tests/test_herramientas.py::test_p2_presupuesto_zipaquira_4_con_350000 PASSED [ 30%]
+tests/test_herramientas.py::test_p3_villa_de_leyva_sabado_2_personas PASSED [ 34%]
+tests/test_herramientas.py::test_p4_suesca_sabado_3_con_250000_si_reserva PASSED [ 39%]
+tests/test_herramientas.py::test_p5_suesca_domingo_3_con_150000_no_alcanza PASSED [ 43%]
+tests/test_herramientas.py::test_buscar_destino_normaliza[Zipaquir\xe1-zipaquira] PASSED [ 47%]
+tests/test_herramientas.py::test_buscar_destino_normaliza[la catedral-zipaquira] PASSED [ 52%]
+tests/test_herramientas.py::test_buscar_destino_normaliza[ZIPA-zipaquira] PASSED [ 56%]
+tests/test_herramientas.py::test_buscar_destino_normaliza[Villa de Leiva-villa de leyva] PASSED [ 60%]
+tests/test_herramientas.py::test_buscar_destino_normaliza[rocas de suesca-suesca] PASSED [ 65%]
+tests/test_herramientas.py::test_buscar_destino_normaliza[Laguna-guatavita] PASSED [ 69%]
+tests/test_herramientas.py::test_buscar_destino_normaliza[Medell\xedn-None] PASSED [ 73%]
+tests/test_herramientas.py::test_buscar_destino_normaliza[-None] PASSED  [ 78%]
+tests/test_herramientas.py::test_listar_destinos_tiene_los_cinco PASSED  [ 82%]
+tests/test_herramientas.py::test_dia_invalido PASSED                     [ 86%]
+tests/test_herramientas.py::test_no_reserva_sin_responsable PASSED       [ 91%]
+tests/test_herramientas.py::test_no_reserva_mas_personas_que_cupos PASSED [ 95%]
+tests/test_herramientas.py::test_personas_cero PASSED                    [100%]
+
+============================== 23 passed in 0.50s ==============================
