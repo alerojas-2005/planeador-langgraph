@@ -2,8 +2,8 @@
 main.py — Chat por consola con el planeador multiagente.
 
 Uso (desde la raíz del repositorio):
-    python -m src.main           -> conversa con el planeador
-    python -m src.main --grafo   -> imprime el grafo en formato Mermaid
+    python -m backend.src.main           -> conversa con el planeador
+    python -m backend.src.main --grafo   -> imprime el grafo en formato Mermaid
 """
 import sys
 import time
